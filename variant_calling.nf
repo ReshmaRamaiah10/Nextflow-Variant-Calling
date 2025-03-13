@@ -1,6 +1,7 @@
 nextflow.enable.dsl=2
 
 params.input = "sample_list.txt"  // Path to the sample list file
+params.ref_fasta = "/path/to/reference/genome.fa"  // Update with the actual path to reference genome
 
 process BWA_INDEX {
     tag "Indexing Reference Genome"
@@ -39,14 +40,14 @@ process BWA_ALIGN {
     container 'community.wave.seqera.io/library/bwa-mem2:2.2.1--1842774b9b0b4729'
 
     input:
-    tuple val(sample), path(read1), path(read2), path(index_files)
+    tuple val(sample), path(trimmed_read1), path(trimmed_read2), path(index_files)
 
     output:
     tuple val(sample), path("${sample}_sort.bam"), emit: sorted_bam
 
     script:
     """
-    bwa-mem2 mem -t 8 hg38_bw2 ${read1} ${read2} | \
+    bwa-mem2 mem -t 8 hg38_bw2 ${trimmed_read1} ${trimmed_read2} | \
     samtools sort -@ 8 -o ${sample}_sort.bam -
     """
 }
@@ -122,14 +123,31 @@ process VCF_FILTER {
     tuple val(sample), path(raw_vcf), path(ref_genome)
 
     output:
-    tuple val(sample), path("${sample}_bcftools-final.vcf"), path("${sample}_rmDup_subset.vcf"), emit: filtered_vcf
+    tuple val(sample), path("${sample}_bcftools-final.vcf"), path("${sample}_rmDup_variants.vcf"), emit: filtered_vcf
+    path "${sample}_rmDup_variants.vcf", emit: rmdup_vcf
 
     script:
     """
     bcftools norm -Ou -m-any ${raw_vcf} | \
     bcftools norm -Ov -f ${ref_genome} -o ${sample}_bcftools-final.vcf
 
-    bcftools view -i 'INFO/rmDup="true"' ${sample}_bcftools-final.vcf -Ov -o ${sample}_rmDup_subset.vcf
+    bcftools view ${raw_vcf} -c 1 > ${sample}_rmDup_variants.vcf
+    """
+}
+
+process MERGE_VCF {
+    tag "Merging All VCFs"
+    container 'biocontainers/bcftools:v1.17-1-deb_cv1'
+
+    input:
+    path vcf_files
+
+    output:
+    path "merged_variants.vcf", emit: merged_vcf
+
+    script:
+    """
+    bcftools merge -m all -Ov ${vcf_files.join(' ')} > merged_variants.vcf
     """
 }
 
@@ -154,4 +172,8 @@ workflow VariantCalling {
     raw_vcfs = VARIANT_CALLING(dedup_bams, downsampled_bams, file(params.ref_fasta))
 
     final_vcfs = VCF_FILTER(raw_vcfs, file(params.ref_fasta))
+
+    rmdup_vcf_files = final_vcfs.map { it[1] } // Extract only the "${sample}_rmDup_variants.vcf"
+
+    MERGE_VCF(rmdup_vcf_files.collect())
 }
