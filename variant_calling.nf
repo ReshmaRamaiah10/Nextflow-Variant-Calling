@@ -118,6 +118,7 @@ process VARIANT_CALLING {
 process VCF_FILTER {
     tag "$sample - Filtering Variants"
     container 'biocontainers/bcftools:v1.17-1-deb_cv1'
+    publishDir params.outdir, mode: 'copy'
 
     input:
     tuple val(sample), path(raw_vcf), path(ref_genome)
@@ -138,6 +139,7 @@ process VCF_FILTER {
 process MERGE_VCF {
     tag "Merging All VCFs"
     container 'biocontainers/bcftools:v1.17-1-deb_cv1'
+    publishDir params.outdir, mode: 'copy'
 
     input:
     path vcf_files
