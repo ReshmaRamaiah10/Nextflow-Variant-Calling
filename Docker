@@ -1,0 +1,35 @@
+# This script installs and sets up the Souporcell pipeline
+# Use an Ubuntu base image
+FROM ubuntu:20.04
+
+# Set noninteractive mode for apt to prevent prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    git \
+    python3 \
+    python3-pip \
+    singularity-container \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a working directory
+WORKDIR /opt/souporcell
+
+# Download Souporcell pipeline
+RUN wget -O souporcell_pipeline.py https://raw.githubusercontent.com/wheaton5/souporcell/master/souporcell_pipeline.py
+
+# Download Souporcell Singularity image
+RUN singularity pull shub://wheaton5/souporcell
+
+# Download Demuxafy Singularity image and MD5 checksum
+RUN wget -O Demuxafy.sif 'https://www.dropbox.com/scl/fi/g0cuyjwomdavom6u6kb2v/Demuxafy.sif?rlkey=xfey1agg371jo4lubsljfavkh&' && \
+    wget -O Demuxafy.sif.md5 'https://www.dropbox.com/scl/fi/bk3p2k2440un6sb6psijn/Demuxafy.sif.md5?rlkey=x3vl8ejpfhjsrvmjanwzkxty9'
+
+# Download Assign_Indiv_by_Geno.R script
+RUN wget -O Assign_Indiv_by_Geno.R https://raw.githubusercontent.com/drneavin/Demultiplexing_Doublet_Detecting_Docs/main/scripts/Assign_Indiv_by_Geno.R
+
+# Set up entry point
+CMD ["/bin/bash"]
