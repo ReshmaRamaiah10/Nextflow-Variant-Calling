@@ -1,7 +1,7 @@
 # Nextflow-Variant-Calling
 Simple but functional genomics pipeline for Variant Calling.
 
-This Nextflow pipeline performs genotype variant calling from paired-end FASTQ files, processing multiple samples in parallel. The workflow trims adapters, aligns reads, marks duplicates, downsamples BAM files, calls variants, filters them, and merges VCFs for final analysis.
+This Nextflow pipeline performs **genotype variant calling** from paired-end FASTQ files, processing multiple samples in parallel. The workflow trims adapters, aligns reads, marks duplicates, downsamples BAM files, calls variants, filters them, and merges VCFs for final analysis.
 
 The pipeline is designed for high-throughput sequencing data and leverages bwa-mem2, samtools, picard, and bcftools inside Docker containers for reproducibility.
 
