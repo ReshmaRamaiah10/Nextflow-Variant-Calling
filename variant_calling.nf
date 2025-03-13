@@ -1,6 +1,6 @@
 nextflow.enable.dsl=2
 
-params.ref_fasta = "/data/peer/lpaddock/data/ref/hg38/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/fasta/genome.fa"
+params.input = "sample_list.txt"  // Path to the sample list file
 
 process BWA_INDEX {
     tag "Indexing Reference Genome"
@@ -135,11 +135,9 @@ process VCF_FILTER {
 
 workflow VariantCalling {
     samples = Channel
-        .fromFilePairs("*_R{1,2}_001.fastq.gz", flat: true)
-        .map { pair -> 
-            def sample = pair.key.replaceAll("_R[12]_001.fastq.gz", "")
-            tuple(sample, pair.val[0], pair.val[1])
-        }
+        .fromPath(params.input) // Read input list from sample_list.txt
+        .splitCsv(header: false, sep: "\t")  // Split based on tab separator
+        .map { row -> tuple(row[0], file(row[1]), file(row[2])) } // Create a tuple with sample name, R1, and R2
 
     index_files = BWA_INDEX(file(params.ref_fasta))
 
