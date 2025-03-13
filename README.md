@@ -5,6 +5,7 @@ This Nextflow pipeline performs **genotype variant calling** from paired-end FAS
 
 The pipeline is designed for high-throughput sequencing data and leverages bwa-mem2, samtools, picard, and bcftools inside Docker containers for reproducibility.
 
+📌 "The Demuxafy-Souporcell pipeline is still a work in progress.
 ## 📂 Input Files
 
 * **`sample_list.txt`** → A tab-delimited file containing sample names and paths to paired-end FASTQ files:
