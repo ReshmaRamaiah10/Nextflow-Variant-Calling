@@ -54,7 +54,7 @@ process BWA_ALIGN {
 
 process MARK_DUPLICATES {
     tag "$sample - Removing Duplicates"
-    container 'broadinstitute/picard:2.27.4'
+    container 'broadinstitute/gatk:4.1.3.0
 
     input:
     tuple val(sample), path(sorted_bam)
@@ -76,7 +76,7 @@ process MARK_DUPLICATES {
 
 process DOWNSAMPLE {
     tag "$sample - Downsampling $percent%"
-    container 'broadinstitute/picard:2.27.4'
+    container 'broadinstitute/gatk:4.1.3.0'
 
     input:
     tuple val(sample), path(dedup_bam)
